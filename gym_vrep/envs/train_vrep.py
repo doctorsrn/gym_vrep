@@ -15,13 +15,16 @@ def callback(lcl, _glb):
     :param _glb: (dict) the global variables
     :return: (bool) is solved
     """
+    #print(lcl['self'])
     # stop training if reward exceeds 199
-    if len(lcl['episode_rewards'][-101:-1]) == 0:
-        mean_100ep_reward = -np.inf
-    else:
-        mean_100ep_reward = round(float(np.mean(lcl['episode_rewards'][-101:-1])), 1)
-    is_solved = lcl['self'].num_timesteps > 100 and mean_100ep_reward >= 199
-    return not is_solved
+    # if len(lcl['episode_rewards'][-101:-1]) == 0:
+    #     mean_100ep_reward = -np.inf
+    # else:
+    #     mean_100ep_reward = round(float(np.mean(lcl['episode_rewards'][-101:-1])), 1)
+    # is_solved = lcl['self'].num_timesteps > 100 and mean_100ep_reward >= 199
+    if lcl['self'].num_timesteps % lcl['self'].checkpoint_freq == 0:
+        lcl['self'].save(lcl['self'].checkpoint_path+'cartpole_model'+str(lcl['self'].num_timesteps)+'.pkl')
+    return True
 
 
 def main(args):
@@ -54,11 +57,14 @@ def main(args):
         env=env,
         policy=MlpPolicy,
         verbose=1,
-        learning_rate=1e-3,
-        buffer_size=3,
-        batch_size=1,
-        checkpoint_freq=2,
+        learning_rate=1e-4,
+        buffer_size=6000,
+        train_freq=1,
+        learning_starts=100,
+        batch_size=32,
+        checkpoint_freq=3000,
         checkpoint_path='./model',
+        target_network_update_freq=300,
         prioritized_replay=True,
         exploration_fraction=0.1,
         exploration_final_eps=0.02,
@@ -66,10 +72,13 @@ def main(args):
     )
     model.learn(total_timesteps=args.max_timesteps)
 
+    print("Saving model to slab_installing_model.pkl")
+    model.save("slab_installing_model.pkl")
+
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train DQN on cartpole")
-    parser.add_argument('--max-timesteps', default=20, type=int, help="Maximum number of timesteps")
+    parser.add_argument('--max-timesteps', default=15000, type=int, help="Maximum number of timesteps")
     args = parser.parse_args()
     main(args)
