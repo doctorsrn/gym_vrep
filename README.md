@@ -1,5 +1,5 @@
 ## Introduction
-Using robot simulator V-REP to creat a reinforcement environment like Gym based on b0RemoteApi from V-rep, and can use OpenAI [baseline](https://github.com/openai/baselines/) or [stable-baseline](https://github.com/hill-a/stable-baselines) to train RL model.
+Using robot simulator V-REP to creat a reinforcement environment for dual-arm robot like Gym based on b0RemoteApi from V-rep, and can use OpenAI [baseline](https://github.com/openai/baselines/) or [stable-baseline](https://github.com/hill-a/stable-baselines) to train RL model.
 
 Reference web: 
 + https://github.com/openai/gym/blob/master/docs/creating-environments.md
