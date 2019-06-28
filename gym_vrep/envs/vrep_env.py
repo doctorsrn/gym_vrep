@@ -24,6 +24,7 @@ from gym_vrep.envs import b0RemoteApi
 import time
 import math
 import numpy as np
+import os
 
 # import gym api
 import gym
@@ -92,6 +93,9 @@ class Vrep_Env(gym.Env):
             self.client = b0RemoteApi.RemoteApiClient('b0RemoteApi_pythonClient','b0RemoteApi',60)
         except:
             raise Exception('connot connect to the vrep server')
+        # info
+        logger.set_level(20)
+        logger.info('gym_vrep located at: ' + str(os.path.realpath('./')))
         
         # a simple communication test
         self.client.simxAddStatusbarMessage('Hello',self.client.simxDefaultPublisher()) 
@@ -280,7 +284,8 @@ class Vrep_Env(gym.Env):
         T2 = self.state[9:12]
         
         # some little value using for comparation
-        d1 = 0.2  # Fz
+        #d1 = 0.2  # Fz
+        d1 = 5
         d2 = 0.2  # Tx
         d3 = 0.2  # Ty
 
@@ -404,7 +409,7 @@ class Vrep_Env(gym.Env):
         maxConfigsForDesiredPose=20 # will try to find 10 different states corresponding to the goal pose and order them according to distance from initial state
         maxTrialsForConfigSearch=300 # a parameter needed for finding appropriate goal states
         searchCount=2 #2 # how many times OMPL will run for a given task
-        minConfigsForPathPlanningPath=400 # interpolation states for the OMPL path
+        minConfigsForPathPlanningPath= 50 #400 # interpolation states for the OMPL path
         minConfigsForIkPath=50 #100 # interpolation states for the linear approach path
         collisionChecking=1 # whether collision checking is on or off
         
@@ -584,7 +589,7 @@ class Vrep_Env(gym.Env):
         maxTrialsForConfigSearch=300 # a parameter needed for finding appropriate goal states
         searchCount=160 #2 # how many times OMPL will run for a given task
         minConfigsForPathPlanningPath=20 # interpolation states for the OMPL path
-        minConfigsForIkPath=60 #100 # interpolation states for the linear approach path
+        minConfigsForIkPath=40 #60 #100 # interpolation states for the linear approach path
         collisionChecking=0 # whether collision checking is on or off
         
         ##########
@@ -690,7 +695,7 @@ class Vrep_Env(gym.Env):
         maxTrialsForConfigSearch=300 # a parameter needed for finding appropriate goal states
         searchCount=160 #2 # how many times OMPL will run for a given task
         minConfigsForPathPlanningPath=20 # interpolation states for the OMPL path
-        minConfigsForIkPath=60 #100 # interpolation states for the linear approach path
+        minConfigsForIkPath=40 #60 #100 # interpolation states for the linear approach path
         collisionChecking=0 # whether collision checking is on or off
         
         
@@ -793,7 +798,7 @@ class Vrep_Env(gym.Env):
         maxTrialsForConfigSearch=300 # a parameter needed for finding appropriate goal states
         searchCount=160 #2 # how many times OMPL will run for a given task
         minConfigsForPathPlanningPath=20 # interpolation states for the OMPL path
-        minConfigsForIkPath=60 #100 # interpolation states for the linear approach path
+        minConfigsForIkPath=40 #60 #100 # interpolation states for the linear approach path
         collisionChecking=0 # whether collision checking is on or off
         
         
