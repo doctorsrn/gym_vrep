@@ -115,9 +115,9 @@ class Vrep_Env(gym.Env):
         self.rotate_angle_z = 0
 
         # threshold value for motion along x,y,z
-        self.x_threshold_dis = 0.25
-        self.y_threshold_angle = 15 / 180 * math.pi
-        self.z_threshold_angle = 15 / 180 * math.pi 
+        self.x_threshold_dis = 0.085 #0.25
+        self.y_threshold_angle = 8 / 180 * math.pi  # 15
+        self.z_threshold_angle = 8 / 180 * math.pi # 15
 
         # RL state, action, reward
         # TODO: to set this two threshold
@@ -125,7 +125,7 @@ class Vrep_Env(gym.Env):
         torque_threshold = 200
         high = np.array([force_threshold for _ in range(3)] + [torque_threshold for _ in range(3)] + 
                         [force_threshold for _ in range(3)] + [torque_threshold for _ in range(3)] )
-        self.action_space = spaces.Discrete(7)  # 0: not move 1,2: move laong x:+,-  3,4: rotate along y:+,-  4,6: rotate along z:+, -
+        self.action_space = spaces.Discrete(6)  # 0,1: move laong x:+,-  2,3: rotate along y:+,-  4,5: rotate along z:+, -
         # two F/T sensor's data
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
@@ -158,33 +158,33 @@ class Vrep_Env(gym.Env):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         state = self.state
 
-        # not move
-        if action == 0:
-            self.state = state
+        # # not move
+        # if action == 0:
+        #     self.state = state
         
-        if action == 1:
+        if action == 0:
             self.move_slabstone_along_x(self.delta)
         
-        if action == 2:
+        if action == 1:
             self.move_slabstone_along_x(-self.delta)
         
-        if action == 3:
+        if action == 2:
             self.rotate_slabstone_along_y(self.theta)
         
-        if action == 4:
+        if action == 3:
             self.rotate_slabstone_along_y(-self.theta)
         
-        if action == 5:
+        if action == 4:
             self.rotate_slabstone_along_z(self.theta)
         
-        if action == 6:
+        if action == 5:
             self.rotate_slabstone_along_z(-self.theta)
         
         # get new state
         self.state = self.state_process() 
         self.counts += 1
 
-        done, reward = self.reward_func1(action)
+        done, reward = self.reward_func2(action)
 
         # print("reward:%f, done:",)
         # print('reward:%f, done:%s'%(reward, str(done)))
@@ -319,7 +319,56 @@ class Vrep_Env(gym.Env):
             reward = -0.1
 
         return done, reward
-    
+
+    def reward_func2(self, action):
+        """
+        reard function, calculate reward for current state and action
+        """
+        # left arm's force state 
+        F1 = self.state[0:3]
+        T1 = self.state[3:6]
+
+        # right arm's force state 
+        F2 = self.state[6:9]
+        T2 = self.state[9:12]
+        
+        # some little value using for comparation
+        #d1 = 0.2  # Fz
+        d1 = 5
+        d2 = 0.2  # Tx
+        d3 = 0.2  # Ty
+
+        # set target force value along z-axis by experience, unit = N
+        Ft = 30
+        
+        # not explore succeed
+        if (self.counts > self.counts_max) or (self.move_distance_x > self.x_threshold_dis) or \
+        (abs(self.rotate_angle_y) > self.y_threshold_angle) or (abs(self.rotate_angle_z) > self.z_threshold_angle):
+
+           done = True
+           reward = -1
+        # installing succeed condition
+        # use relative coordinates in end effector, that Z-axis ointing to the wall, X-axis is horizontal direction, 
+        # and Y-axis is vertical direction
+        # succeed condition: Fz1=Fz2=Ft, Tx1=Tx2=0, Ty1=-Ty2=0
+        elif (abs(F1[2] - F2[2]) < 10) and (abs(F1[2]+F2[2] - Ft) < 5): 
+            done = True
+            reward = 1
+        
+        elif (action == 0) and (self.move_distance_x < self.x_threshold_dis * 0.3):  # a guide reward to make slab move along x-axis in early time
+            done = False
+            reward = 0.05
+        
+        elif (action == 1) and (self.move_distance_x > self.x_threshold_dis * 0.7): # a punishment reward, restric to the motion along the  negative direction of x-axis
+            done = False
+            reward = -0.3
+        
+        else:  # continue to exploring, and give a little punishment reward
+            done = False
+            reward = -0.1
+
+        return done, reward
+
     def initial_simulation(self):
         """
         initialize the simulation, and get some objects handles
@@ -682,7 +731,7 @@ class Vrep_Env(gym.Env):
                                      
         ## finish motion along x-axis
     
-    
+    # TODO: this function has some bugs to fix
     def rotate_slabstone_along_y(self, theta):
         """
         rotate slabstone along y-axis in absolute coordinate, and it will rotate along x-axis in slab coordinate
