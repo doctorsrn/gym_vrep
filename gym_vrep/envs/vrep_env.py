@@ -189,7 +189,7 @@ class Vrep_Env(gym.Env):
         # print("reward:%f, done:",)
         # print('reward:%f, done:%s'%(reward, str(done)))
         logger.set_level(20)
-        logger.info('reward:%f, done:%s'%(reward, str(done)))
+        logger.info('action:%d, reward:%f, done:%s'%(action, reward, str(done)))
 
 
         return self.state, reward, done, {}
@@ -324,6 +324,7 @@ class Vrep_Env(gym.Env):
         """
         reard function, calculate reward for current state and action
         """
+        
         # left arm's force state 
         F1 = self.state[0:3]
         T1 = self.state[3:6]
@@ -331,6 +332,8 @@ class Vrep_Env(gym.Env):
         # right arm's force state 
         F2 = self.state[6:9]
         T2 = self.state[9:12]
+
+        print("F1[2]:%f, F2[2]:%f"%(F1[2],F2[2]))
         
         # some little value using for comparation
         #d1 = 0.2  # Fz
@@ -342,7 +345,7 @@ class Vrep_Env(gym.Env):
         Ft = 30
         
         # not explore succeed
-        if (self.counts > self.counts_max) or (self.move_distance_x > self.x_threshold_dis) or \
+        if (self.counts >= self.counts_max) or (abs(self.move_distance_x) > self.x_threshold_dis) or (abs(F1[2]+F2[2]) > 4*Ft) or \
         (abs(self.rotate_angle_y) > self.y_threshold_angle) or (abs(self.rotate_angle_z) > self.z_threshold_angle):
 
            done = True
@@ -351,11 +354,11 @@ class Vrep_Env(gym.Env):
         # use relative coordinates in end effector, that Z-axis ointing to the wall, X-axis is horizontal direction, 
         # and Y-axis is vertical direction
         # succeed condition: Fz1=Fz2=Ft, Tx1=Tx2=0, Ty1=-Ty2=0
-        elif (abs(F1[2] - F2[2]) < 10) and (abs(F1[2]+F2[2] - Ft) < 5): 
+        elif (abs(F1[2] - F2[2]) < 10) and (abs(abs(F1[2]+F2[2]) - 2*Ft) < 5): 
             done = True
             reward = 1
         
-        elif (action == 0) and (self.move_distance_x < self.x_threshold_dis * 0.3):  # a guide reward to make slab move along x-axis in early time
+        elif (action == 0) and (self.move_distance_x < self.x_threshold_dis * 0.2):  # a guide reward to make slab move along x-axis in early time
             done = False
             reward = 0.05
         
@@ -365,9 +368,25 @@ class Vrep_Env(gym.Env):
         
         else:  # continue to exploring, and give a little punishment reward
             done = False
-            reward = -0.1
+            reward = -0.2
+        
+        reward = reward + self.reward_attach(F1[2], F2[2], Ft)
 
         return done, reward
+    
+    def reward_attach(self, F1, F2, Ft):
+        """
+        attach reward according from distance between current state to target state
+        """
+        if F1 < 0 and F2 < 0:
+            reward = (Ft - np.linalg.norm([abs(F1)-Ft, abs(F2)-Ft])) / Ft * 0.1
+            if reward < -2 * 0.1:
+                reward = -0.1
+            return reward
+        
+        return 0
+            
+
 
     def initial_simulation(self):
         """
