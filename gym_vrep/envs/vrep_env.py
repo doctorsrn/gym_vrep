@@ -967,7 +967,7 @@ class Vrep_Env(gym.Env):
         """
         # if reset several times, use self.reset_simulation() to reset simulation to decrease shift
         self.reset_counter += 1
-        if self.reset_counter >= 20:
+        if self.reset_counter >= 15:
             self.reset_counter = 0
             try:
                 self.reset_simulation()
