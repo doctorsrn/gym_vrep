@@ -143,6 +143,9 @@ class Vrep_Env(gym.Env):
         # get initial state
         self.state = self.state_process()
 
+        # count reset times
+        self.reset_counter = 0
+
 
     
     def seed(self, seed=None):
@@ -347,14 +350,13 @@ class Vrep_Env(gym.Env):
         # not explore succeed
         if (self.counts >= self.counts_max) or (abs(self.move_distance_x) > self.x_threshold_dis) or (abs(F1[2]+F2[2]) > 4*Ft) or \
         (abs(self.rotate_angle_y) > self.y_threshold_angle) or (abs(self.rotate_angle_z) > self.z_threshold_angle):
-
-           done = True
-           reward = -1
+            done = True
+            reward = -1
         # installing succeed condition
         # use relative coordinates in end effector, that Z-axis ointing to the wall, X-axis is horizontal direction, 
         # and Y-axis is vertical direction
         # succeed condition: Fz1=Fz2=Ft, Tx1=Tx2=0, Ty1=-Ty2=0
-        elif (abs(F1[2] - F2[2]) < 10) and (abs(abs(F1[2]+F2[2]) - 2*Ft) < 5): 
+        elif (abs(F1[2] - F2[2]) < 10) and (abs(abs(F1[2]+F2[2]) - 2*Ft) < 10): 
             done = True
             reward = 1
         
@@ -362,13 +364,13 @@ class Vrep_Env(gym.Env):
             done = False
             reward = 0.05
         
-        elif (action == 1) and (self.move_distance_x > self.x_threshold_dis * 0.7): # a punishment reward, restric to the motion along the  negative direction of x-axis
+        elif (action == 1) and (self.move_distance_x > self.x_threshold_dis * 0.6): # a punishment reward, restric to the motion along the  negative direction of x-axis
             done = False
             reward = -0.3
         
         else:  # continue to exploring, and give a little punishment reward
             done = False
-            reward = -0.2
+            reward = -0.1
         
         reward = reward + self.reward_attach(F1[2], F2[2], Ft)
 
@@ -386,8 +388,6 @@ class Vrep_Env(gym.Env):
         
         return 0
             
-
-
     def initial_simulation(self):
         """
         initialize the simulation, and get some objects handles
@@ -965,6 +965,19 @@ class Vrep_Env(gym.Env):
         """
         move slabstone to initial pose from current pose
         """
+        # if reset several times, use self.reset_simulation() to reset simulation to decrease shift
+        self.reset_counter += 1
+        if self.reset_counter >= 20:
+            self.reset_counter = 0
+            try:
+                self.reset_simulation()
+                print("reset slabstone pose finished")
+                return 0
+            except:
+                print("reset slabstone pose failed")
+                raise Exception("reset slabstone pose failed")
+                return 0
+
         # some parameters use for path planning
         approachVector=[0,0,0] #[0,0,0.063] # often a linear approach is required. This should also be part of the calculations when selecting an appropriate state for a given pose
         maxConfigsForDesiredPose=20 # will try to find 10 different states corresponding to the goal pose and order them according to distance from initial state
