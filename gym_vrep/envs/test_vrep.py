@@ -59,6 +59,7 @@ def main(args):
             f.write(res+'\n')
         
         env.reset_simulation()
+    env.close()
    
 
 if __name__ == "__main__":
