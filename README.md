@@ -61,6 +61,6 @@ if __name__ == '__main__':
 ```
 
 Start training, and can see:
-![]()
+![trainning_pics](https://raw.githubusercontent.com/doctorsrn/gym_vrep/master/docs/gif/training.gif)
 ## More
 not finished yet...
