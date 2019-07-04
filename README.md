@@ -60,5 +60,7 @@ if __name__ == '__main__':
     main(args)
 ```
 
+Start training, and can see:
+![]()
 ## More
 not finished yet...
