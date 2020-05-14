@@ -63,5 +63,5 @@ if __name__ == '__main__':
 Start training, and can see:
 ![trainning_pics](https://raw.githubusercontent.com/doctorsrn/gym_vrep/master/docs/gif/training.gif)
 
-## Reference
+## Citing
 D. Liu, J. Cao and X. Lei, ["Slabstone Installation Skill Acquisition for Dual-Arm Robot based on Reinforcement Learning,"](https://ieeexplore.ieee.org/abstract/document/8961805) 2019 IEEE International Conference on Robotics and Biomimetics (ROBIO), Dali, China, 2019, pp. 1298-1305, doi: 10.1109/ROBIO49542.2019.8961805.
